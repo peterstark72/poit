@@ -1,9 +1,11 @@
 package poit
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/html"
@@ -12,27 +14,32 @@ import (
 //RecordNumberRegexp is regexp for a record number
 var RecordNumberRegexp = regexp.MustCompile(`SBN\s\d{4}-\d{5}`)
 
+//ParseAnnouncementText parses announcement text field
+func ParseAnnouncementText(doc *html.Node) AnnouncementText {
+	var s []string
+	for _, node := range htmlquery.Find(doc, "//div[@class = 'kungtext']//text()") {
+		s = append(s, strings.TrimSpace(htmlquery.InnerText(node)))
+	}
+	return s
+}
+
 //ParseAnnouncements from resultpage
 func ParseAnnouncements(doc *html.Node) []Announcement {
-
-	getcol := func(col *html.Node, expr string) string {
-		return strings.TrimSpace(htmlquery.InnerText(htmlquery.FindOne(col, expr)))
-	}
 
 	var announcements []Announcement
 	for _, row := range htmlquery.Find(doc, "//table[@class = 'result']/tbody/tr") {
 
-		a := Announcement{
-			getcol(row, "td[1]/a/text()"),
-			getcol(row, "td[2]"),
-			getcol(row, "td[3]"),
-			getcol(row, "td[4]"),
-			getcol(row, "td[5]"),
-			getcol(row, "td[6]"),
+		var cols []string
+		for _, col := range htmlquery.Find(row, "td") {
+			cols = append(cols, strings.TrimSpace(htmlquery.InnerText(col)))
 		}
-		announcements = append(announcements, a)
-	}
 
+		pubDate, err := time.Parse("2006-01-02", cols[5])
+		if err != nil {
+			fmt.Println("Could not read published date.")
+		}
+		announcements = append(announcements, Announcement{cols[0], cols[1], cols[2], cols[3], cols[4], pubDate})
+	}
 	return announcements
 }
 

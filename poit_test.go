@@ -18,6 +18,7 @@ func TestSearchTygelsjo(t *testing.T) {
 
 	var announcements []Announcement
 	for a := range poc.Search("Tygelsjö") {
+		fmt.Println(a)
 		announcements = append(announcements, a)
 	}
 	if len(announcements) == 0 {
@@ -30,6 +31,7 @@ func TestSearchMalmo(t *testing.T) {
 	poc := NewClient()
 	var announcements []Announcement
 	for a := range poc.Search("Malmö") {
+		fmt.Println(a)
 		announcements = append(announcements, a)
 	}
 	if len(announcements) == 0 {

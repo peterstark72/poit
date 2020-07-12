@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"strings"
+	"time"
 
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/publicsuffix"
@@ -20,7 +20,8 @@ import (
 
 //Announcement is an POIT Kungörelse
 type Announcement struct {
-	ID, Customer, Type, Number, Name, Published string
+	ID, Customer, Type, Number, Name string
+	Published                        time.Time
 }
 
 //AnnouncementText is an array of string
@@ -61,11 +62,7 @@ func (poc Client) GetAnnouncementText(ann Announcement) AnnouncementText {
 		fmt.Println(err)
 	}
 
-	var s []string
-	for _, node := range htmlquery.Find(doc, "//div[@class = 'kungtext']//text()") {
-		s = append(s, strings.TrimSpace(htmlquery.InnerText(node)))
-	}
-	return s
+	return ParseAnnouncementText(doc)
 }
 
 //Search returns a channel with announcements

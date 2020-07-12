@@ -1,5 +1,8 @@
 /*
 Package poit implements a search query to the POIT website, poit.bolagsverket.se.
+
+The query is a keyword, e.g. "Malmö", and returns all relevant announcements from
+last month. For some reason the POIT search does not allow other time periods.
 */
 package poit
 
@@ -9,10 +12,19 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 
 	"github.com/antchfx/htmlquery"
 	"golang.org/x/net/publicsuffix"
 )
+
+//Announcement is an POIT Kungörelse
+type Announcement struct {
+	ID, Customer, Type, Number, Name, Published string
+}
+
+//AnnouncementText is an array of string
+type AnnouncementText []string
 
 //PoitURL is the start
 const PoitURL = "https://poit.bolagsverket.se/poit/PublikPoitIn.do"
@@ -20,8 +32,43 @@ const PoitURL = "https://poit.bolagsverket.se/poit/PublikPoitIn.do"
 //SearchURL is the Form endpoint for searches
 const SearchURL = "https://poit.bolagsverket.se/poit/PublikSokKungorelse.do"
 
+type PoitClient struct {
+	Client *http.Client
+}
+
+//NewClient creates a new Poit Client with empty cookie jar
+func NewClient() PoitClient {
+	jar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	return PoitClient{&http.Client{Jar: jar}}
+}
+
+//GetAnnouncementText returns details of the announcement
+func (poc PoitClient) GetAnnouncementText(ann Announcement) AnnouncementText {
+
+	params := url.Values{}
+	params.Set("diarienummer_presentera", ann.ID)
+	params.Set("method", "presenteraKungorelse")
+
+	u := fmt.Sprintf("%s?%s", SearchURL, params.Encode())
+
+	resp, err := poc.Client.Get(u)
+	if err != nil {
+		fmt.Println(err)
+	}
+	doc, err := htmlquery.Parse(resp.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var s []string
+	for _, node := range htmlquery.Find(doc, "//div[@class = 'kungtext']//text()") {
+		s = append(s, strings.TrimSpace(htmlquery.InnerText(node)))
+	}
+	return s
+}
+
 //Search returns a channel with announcements
-func Search(query string) chan Announcement {
+func (poc PoitClient) Search(query string) chan Announcement {
 
 	out := make(chan Announcement)
 
@@ -29,11 +76,11 @@ func Search(query string) chan Announcement {
 
 		var err error
 
-		jar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
-		client := &http.Client{Jar: jar}
-
 		//We do this just to get a cookie
-		client.Get(PoitURL)
+		_, err = poc.Client.Get(PoitURL)
+		if err != nil {
+			fmt.Println(err)
+		}
 
 		//The search query
 		data := url.Values{}
@@ -41,20 +88,22 @@ func Search(query string) chan Announcement {
 		data.Set("fritext", query)
 		data.Set("method", "Sök")
 
+		//For some weird reason, we must make an inital POST and ignore the response
 		req, _ := http.NewRequest("POST", SearchURL, bytes.NewBufferString(data.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-		_, err = client.Do(req)
+		_, err = poc.Client.Do(req)
 		if err != nil {
 			fmt.Println(err)
 		}
 
 		for {
+			//Run forever or until no more pages
 
 			req, _ = http.NewRequest("POST", SearchURL, bytes.NewBufferString(data.Encode()))
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-			resp, err := client.Do(req)
+			resp, err := poc.Client.Do(req)
 			if err != nil {
 				fmt.Println(err)
 			}

@@ -1,9 +1,6 @@
 package poit
 
 import (
-	"fmt"
-	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,47 +9,8 @@ import (
 	"golang.org/x/net/html"
 )
 
-//Announcement is an POIT Kungörelse
-type Announcement struct {
-	ID, Customer, Type, Number, Name, Published string
-}
-
-//Permit is a real estate permit
-type Permit struct {
-	Announcement
-	RealEstateName, Address, RecordNumber string
-}
-
-//GetDetails returns details of the announcement
-func (a Announcement) GetDetails(client *http.Client) []string {
-
-	params := url.Values{}
-	params.Set("diarienummer_presentera", a.ID)
-
-	u := fmt.Sprintf("https://poit.bolagsverket.se/poit/PublikSokKungorelse.do?method=presenteraKungorelse&%s", params.Encode())
-
-	resp, err := client.Get(u)
-	if err != nil {
-		fmt.Println(err)
-	}
-	doc, err := htmlquery.Parse(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var s []string
-	for _, node := range htmlquery.Find(doc, "//div[@class = 'kungtext']//text()") {
-		s = append(s, htmlquery.InnerText(node))
-		/*
-			diarienummer := regexp.MustCompile(`SBN\s\d{4}-\d{5}`)
-			pos := diarienummer.FindStringIndex(s)
-			if pos != nil {
-				fmt.Println(s[pos[0] : pos[1]+1])
-			}
-		*/
-	}
-	return s
-}
+//RecordNumberRegexp is regexp for a record number
+var RecordNumberRegexp = regexp.MustCompile(`SBN\s\d{4}-\d{5}`)
 
 //ParseAnnouncements from resultpage
 func ParseAnnouncements(doc *html.Node) []Announcement {
@@ -81,11 +39,8 @@ func ParseAnnouncements(doc *html.Node) []Announcement {
 //HasMorePages returns true if there are more pages
 func HasMorePages(node *html.Node) bool {
 	pageButtons := htmlquery.FindOne(node, "//em[@class = 'gotopagebuttons']")
-	if pageButtons == nil {
-		return false
-	}
-	paginationRegexp := regexp.MustCompile(`\d+`)
 	if pageButtons != nil {
+		paginationRegexp := regexp.MustCompile(`\d+`)
 		breadcrumbs := paginationRegexp.FindAllString(htmlquery.InnerText(pageButtons), 2)
 		if len(breadcrumbs) != 2 {
 			return false

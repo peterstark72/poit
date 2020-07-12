@@ -32,18 +32,19 @@ const PoitURL = "https://poit.bolagsverket.se/poit/PublikPoitIn.do"
 //SearchURL is the Form endpoint for searches
 const SearchURL = "https://poit.bolagsverket.se/poit/PublikSokKungorelse.do"
 
-type PoitClient struct {
+//Client holds the http Client with cookies jar
+type Client struct {
 	Client *http.Client
 }
 
 //NewClient creates a new Poit Client with empty cookie jar
-func NewClient() PoitClient {
+func NewClient() Client {
 	jar, _ := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
-	return PoitClient{&http.Client{Jar: jar}}
+	return Client{&http.Client{Jar: jar}}
 }
 
 //GetAnnouncementText returns details of the announcement
-func (poc PoitClient) GetAnnouncementText(ann Announcement) AnnouncementText {
+func (poc Client) GetAnnouncementText(ann Announcement) AnnouncementText {
 
 	params := url.Values{}
 	params.Set("diarienummer_presentera", ann.ID)
@@ -68,7 +69,7 @@ func (poc PoitClient) GetAnnouncementText(ann Announcement) AnnouncementText {
 }
 
 //Search returns a channel with announcements
-func (poc PoitClient) Search(query string) chan Announcement {
+func (poc Client) Search(query string) chan Announcement {
 
 	out := make(chan Announcement)
 

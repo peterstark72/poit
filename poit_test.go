@@ -5,37 +5,38 @@ import (
 	"testing"
 )
 
-func ExampleClient_Search() {
-	poc := NewClient()
-	for a := range poc.Search("Tygelsjö") {
-		fmt.Println(a)
+func TestSearchWithDetails(t *testing.T) {
+
+	q := Query{}
+	q.selectedPubliceringsIntervall = PubliceringsIntervallLastMonth
+	q.selectedAmnesomrade = AmnesomradeSamtliga
+	q.selectedKundTyp = KundTypSamtliga
+	q.fritext = "Tygelsjö"
+
+	for a := range SearchWithDetails(q) {
+		fmt.Println(a.ID(), a.Name(), a.Published(), a.Text())
 	}
+
 }
 
-func TestSearchTygelsjo(t *testing.T) {
+func TestSearchMany(t *testing.T) {
 
-	poc := NewClient()
+	q := Query{}
+	q.selectedPubliceringsIntervall = PubliceringsIntervallLastMonth
+	q.selectedAmnesomrade = AmnesomradeRealEstate
+	q.kundnamn = "Malmö kommun"
+	q.selectedKundTyp = KundTypKommun
 
-	var announcements []Announcement
-	for a := range poc.Search("Tygelsjö") {
-		fmt.Println(a)
-		announcements = append(announcements, a)
+	for a := range Search(q) {
+		fmt.Println(a.ID(), a.Name(), a.Published())
 	}
-	if len(announcements) == 0 {
-		t.Error("No announcements found")
-	}
+
 }
 
-func TestSearchMalmo(t *testing.T) {
+func TestSearchPermits(t *testing.T) {
 
-	poc := NewClient()
-	var announcements []Announcement
-	for a := range poc.Search("Malmö") {
-		fmt.Println(a)
-		announcements = append(announcements, a)
-	}
-	if len(announcements) == 0 {
-		t.Error("No announcements found")
+	for p := range SearchPermits("Malmö kommun") {
+		fmt.Printf("%s / %s: %s[%s] -- %s\n", p.AnnouncementID, p.Record, p.Estate, p.Address, p.Description)
 	}
 
 }

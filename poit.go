@@ -1,9 +1,4 @@
-/*
-Package poit implements a search query to the POIT website, poit.bolagsverket.se.
-
-The query is a keyword, e.g. "Malmö", and returns all relevant announcements from
-last month. For some reason the POIT search does not allow other time periods.
-*/
+//Package poit implements a search query to the POIT website, poit.bolagsverket.se.
 package poit
 
 import (
@@ -23,7 +18,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-//BaseURL is the base
+//BaseURL is the where POIT is located
 const BaseURL = "https://poit.bolagsverket.se"
 
 //PoitURL is where search starts

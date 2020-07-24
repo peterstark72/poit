@@ -8,6 +8,7 @@ import (
 
 //Permit is a real estate Permit, a special kinf of announcements
 type Permit struct {
+	URL            string
 	AnnouncementID string
 	Name           string
 	Address        string
@@ -38,6 +39,7 @@ func SearchPermits(municipiality string) chan Permit {
 
 			t := a.Text()
 			p := Permit{
+				URL:            a.URL(),
 				Published:      a.Published(),
 				AnnouncementID: a.ID(),
 				Name:           a.Name(),

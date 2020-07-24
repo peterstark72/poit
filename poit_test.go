@@ -36,7 +36,8 @@ func TestSearchMany(t *testing.T) {
 func TestSearchPermits(t *testing.T) {
 
 	for p := range SearchPermits("Malmö kommun") {
-		fmt.Printf("%s / %s: %s[%s] -- %s\n", p.AnnouncementID, p.Record, p.Estate, p.Address, p.Description)
+		if len(p.Address) > 0 {
+			fmt.Printf("%s - %s - %s -- %s\n", p.Published, p.AnnouncementID, p.Address, p.Description)
+		}
 	}
-
 }

@@ -19,13 +19,14 @@ func TestSearchWithDetails(t *testing.T) {
 
 }
 
-func TestSearchMany(t *testing.T) {
+var q = Query{
+	selectedPubliceringsIntervall: PubliceringsIntervallLastMonth,
+	selectedAmnesomrade:           AmnesomradeRealEstate,
+	kundnamn:                      "Malmö kommun",
+	selectedKundTyp:               KundTypKommun,
+}
 
-	q := Query{}
-	q.selectedPubliceringsIntervall = PubliceringsIntervallLastMonth
-	q.selectedAmnesomrade = AmnesomradeRealEstate
-	q.kundnamn = "Malmö kommun"
-	q.selectedKundTyp = KundTypKommun
+func TestSearchMany(t *testing.T) {
 
 	for a := range Search(q) {
 		fmt.Println(a.ID(), a.Name(), a.Published())
@@ -34,10 +35,8 @@ func TestSearchMany(t *testing.T) {
 }
 
 func TestSearchPermits(t *testing.T) {
-
-	for p := range SearchPermits("Malmö kommun") {
-		if len(p.Address) > 0 {
-			fmt.Printf("%s - %s - %s -- %s\n", p.Published, p.AnnouncementID, p.Address, p.Description)
-		}
+	for p := range SearchPermits(q) {
+		//fmt.Printf("%#v", p)
+		fmt.Printf("%s på %s\n", p.Title, p.Street)
 	}
 }

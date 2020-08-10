@@ -58,18 +58,18 @@ const (
 
 //Query is a POIT search query
 type Query struct {
-	selectedPubliceringsIntervall, selectedAmnesomrade, kundnamn, fritext, selectedKundTyp string
+	SelectedPubliceringsIntervall, SelectedAmnesomrade, Kundnamn, Fritext, SelectedKundTyp string
 }
 
 //AsValues returns query as url.Values
 func (q Query) AsValues() url.Values {
 
 	data := url.Values{}
-	data.Set("selectedPubliceringsIntervall", q.selectedPubliceringsIntervall)
-	data.Set("selectedAmnesomrade", q.selectedAmnesomrade)
-	data.Set("kundnamn", q.kundnamn)
-	data.Set("fritext", q.fritext)
-	data.Set("selectedKundTyp", q.selectedKundTyp)
+	data.Set("selectedPubliceringsIntervall", q.SelectedPubliceringsIntervall)
+	data.Set("selectedAmnesomrade", q.SelectedAmnesomrade)
+	data.Set("kundnamn", q.Kundnamn)
+	data.Set("fritext", q.Fritext)
+	data.Set("selectedKundTyp", q.SelectedKundTyp)
 	data.Set("method", "Sök")
 
 	return data
